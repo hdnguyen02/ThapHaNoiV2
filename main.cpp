@@ -12,7 +12,7 @@ class Graphics {
 		int widhScreen , heightScreen; 
 		/* METHOD */
 		void getMaxScreen () {
-			this->widhScreen = GetSystemMetrics(SM_CXSCREEN); 
+			this->widhScreen = GetSystemMetrics(SM_CXSCREEN) - 320; 
 			this->heightScreen = GetSystemMetrics(SM_CYSCREEN); 
 	}
 	public:
@@ -80,10 +80,14 @@ class Tower {
 		int *diaCotA,*diaCotB,*diaCotC;  // chua so dia.
 		int A,C;  // su dung cho muc dich danh dau, 
 		int tocDo; 
+		int timeDelay; 
 		
 		// BIEN SU DUNG CHUNG CHO CA CLASS...
 		int canLeXGiaDo , khoanCachGiaDo ,chieuDaiGiaDo , chieuCaoGiaDo , toaDoYGiaDo , chieuDaiThanh , 
-		toaDoXCotA , toaDoXCotB , toaDoXCotC,  chieuCaoDia, khoanCachDia; 
+		toaDoXCotA , toaDoXCotB , toaDoXCotC,  chieuCaoDia, khoanCachDia,toaDoYTieuDe,XgiaDoA,XgiaDoB,XgiaDoC; 
+		
+		// toa do gia do -> toa do bac dau cua gia do. 
+		
 		
 
 
@@ -107,19 +111,25 @@ class Tower {
 	public: 
 	Tower () {
 			soDia = 0;
-			
+			timeDelay = 0; 
 			// BIEN SU DUNG CHUNG
 			
-			canLeXGiaDo = 40;  
+			canLeXGiaDo = 60;  
 			khoanCachGiaDo = 100;  
 			chieuDaiGiaDo = 300; 
 			chieuCaoGiaDo = 16; 
 			toaDoYGiaDo = 700;
+			toaDoYTieuDe =  740; 
 			chieuDaiThanh = 18; 
 			chieuCaoDia = 18; 
-			khoanCachDia = 6; 
+			khoanCachDia = 2; 
 			
-			tocDo = 8; 
+			XgiaDoA  = canLeXGiaDo;  
+			XgiaDoB  = khoanCachGiaDo + chieuDaiGiaDo + canLeXGiaDo; 
+			XgiaDoC  = (khoanCachGiaDo + chieuDaiGiaDo)*2 + canLeXGiaDo; 
+			
+
+			tocDo = 4;
 			// toa do 3 cot ( sau khi tinh toan )
 			toaDoXCotA = canLeXGiaDo  +  chieuDaiGiaDo / 2 - chieuDaiThanh  / 2; 
 			toaDoXCotB = khoanCachGiaDo + chieuDaiGiaDo + canLeXGiaDo + chieuDaiGiaDo / 2 - chieuDaiThanh / 2;
@@ -128,10 +138,31 @@ class Tower {
 			
 			
 		}
+//		string strChuyen (int n,string strA,string strB) { 
+//			sstream ss; 
+//			ss << n; 
+//			string ntemp; 
+//			ss >> ntemp; 
+//			string tuCotDenCot = "dia thu " + ntemp + " [" + strA + " -> "	+ strB + "]"; 
+//			cout << tuCotDenCot; 
+//			return tuCotDenCot; 
+//		} 
 		void thapHaNoi (int soDiaParam,int *diaCotA,int toaDoXCotA,int *diaCotB,int toaDoXCotB,
 		int *diaCotC, int toaDoXCotC,string strA,string strB,string strC) {
 			if (soDiaParam == 1) {
 				cout << strA << " ---> " << strC << endl; 
+		
+				setfillstyle(SOLID_FILL, 15); 
+				Graphics::drawRegtagle(60,140,180,40); 
+				
+				string tuCotDenCot = strA + " -> " + strC; 
+				
+				settextstyle(10, HORIZ_DIR, 1);
+				
+				outtextxy(73,150,(char*)tuCotDenCot.c_str());
+				
+				
+				
 				Helper::sapXepTangDan(diaCotA,this->soDia);
 				Helper::sapXepGiamDan(diaCotC,this->soDia); 
 				for (int i = 0; i < this->soDia;i++) {
@@ -163,21 +194,44 @@ class Tower {
 				 diaCotA[A] = 0; 
 			}
 			else {
-				thapHaNoi(soDiaParam - 1,diaCotA,toaDoXCotA,diaCotC,toaDoXCotC,diaCotB,toaDoXCotB,"Cot A","Cot C","Cot B"); 
-				thapHaNoi(1,diaCotA,toaDoXCotA,diaCotB,toaDoXCotB,diaCotC,toaDoXCotC,"Cot A","Cot B","Cot C");
-				thapHaNoi(soDiaParam - 1,diaCotB,toaDoXCotB,diaCotA,toaDoXCotA,diaCotC,toaDoXCotC,"Cot B","Cot A","Cot C"); 
+				thapHaNoi(soDiaParam - 1,diaCotA,toaDoXCotA,diaCotC,toaDoXCotC,diaCotB,toaDoXCotB,strA,strC,strB); 
+				thapHaNoi(1,diaCotA,toaDoXCotA,diaCotB,toaDoXCotB,diaCotC,toaDoXCotC,strA,strB,strC);
+				thapHaNoi(soDiaParam - 1,diaCotB,toaDoXCotB,diaCotA,toaDoXCotA,diaCotC,toaDoXCotC,strB,strA,strC); 
 			}
-	}
+	}	
+		void dieuKhienTocDo () {
+			// khi ham nay -> duoc goi -> tac dong len bien toc do 
+			char c; 
+			if (kbhit()) {
+				c = getch(); 
+				if ( c == 72) { // phim mui ten di len
+					// tang toc do nguoi dung len ( max la 8 ) 
+					// khi nhap vao nut nay -> tang toc ne -> cho tang len het nat 
+					// time delay == 0 la chay nhanh nhat roi ( khong the nhanh hon duoc nua )  
+					if (tocDo != 36) {
+						tocDo += 2; 
+					}
+				}
+				else if  (c == 80) { // phim mui ten di xuong
+					if (tocDo != 0) {
+						tocDo -= 2; 
+					}
+				}
+			}
+		}
 		// LAM VIEC CHINH 
 		void diChuyenDia (int XcotDau,int soDiaCotDau,int XcotSau,int soDiaCotSau,int duongKinhDiaTrenCung) {
 			int XDiaCotDau = XcotDau  - duongKinhDiaTrenCung / 2 + 18 / 2  ;  
-			int i; 
-			for (i = 0; i <= (480 - chieuCaoDia * soDiaCotDau) ; i += tocDo ) {  // ve di xoa lai 400 lan. 
+			int i = 0; 
+			while (i <= (480 - (chieuCaoDia + khoanCachDia) * soDiaCotDau)) {
 				this->veDia( XDiaCotDau, toaDoYGiaDo - i  - (chieuCaoDia + khoanCachDia) * soDiaCotDau,duongKinhDiaTrenCung ); 
-				delay(0); 
-				this->xoaDia( XDiaCotDau, toaDoYGiaDo - i  - (chieuCaoDia + khoanCachDia) * soDiaCotDau,duongKinhDiaTrenCung );
-				this->ve03Cot(); 	
-			} 
+				this->ve03Cot(); 
+				delay(timeDelay); 
+				this->xoaDia( XDiaCotDau, toaDoYGiaDo - i  - (chieuCaoDia + khoanCachDia) * soDiaCotDau,duongKinhDiaTrenCung );	
+				this->dieuKhienTocDo(); 
+				i += tocDo; 
+			}
+			this->ve03Cot();
 			
 			int YDiaDiChuyenNgang = toaDoYGiaDo - i  - (chieuCaoDia + khoanCachDia) * soDiaCotDau; 
 			int toaDoXDiaDiChuyen; 
@@ -185,27 +239,30 @@ class Tower {
 			if (XcotDau - XcotSau < 0) {
 				int SdiChuyenDia = XcotSau - XcotDau; 
 		
-				int j; 
-				for (j = 0; j <= SdiChuyenDia ;j += tocDo) {
+				int j = 0; 
+				while ( j <= SdiChuyenDia ) {
 					this->veDia(XDiaCotDau + j ,YDiaDiChuyenNgang,duongKinhDiaTrenCung); 
-					delay(0); 
-					this->xoaDia(XDiaCotDau + j ,YDiaDiChuyenNgang,duongKinhDiaTrenCung);  
 					this->ve03Cot(); 
-					
-				} 
-				toaDoXDiaDiChuyen = XcotSau - duongKinhDiaTrenCung / 2 + 18 / 2; 
-				
+					delay(timeDelay); 
+					this->xoaDia(XDiaCotDau + j ,YDiaDiChuyenNgang,duongKinhDiaTrenCung);  
+					this->dieuKhienTocDo();  
+					j += tocDo;
+				}
+				this->ve03Cot();
+				toaDoXDiaDiChuyen = XcotSau - duongKinhDiaTrenCung / 2 + 18 / 2; 	
 			}
 			else {
 				int SdiChuyenDia = XcotDau - XcotSau; 
-				int j; 
-				for (j = 0; j <= SdiChuyenDia;j+= tocDo) {
+				int j = 0;  
+				while (j <= SdiChuyenDia) {
 					this->veDia(XDiaCotDau - j ,YDiaDiChuyenNgang,duongKinhDiaTrenCung); 
-					delay(0); 
-					this->xoaDia(XDiaCotDau - j,YDiaDiChuyenNgang,duongKinhDiaTrenCung); 
 					this->ve03Cot(); 
+					delay(timeDelay); 
+					this->xoaDia(XDiaCotDau - j,YDiaDiChuyenNgang,duongKinhDiaTrenCung);
+					this->dieuKhienTocDo();  
+					j+= tocDo; 
 				}
-
+				this->ve03Cot(); 
 				toaDoXDiaDiChuyen = XcotSau - duongKinhDiaTrenCung / 2 + 18 / 2; 
 			}
 		
@@ -214,15 +271,21 @@ class Tower {
 		  	int k; 
 		  	int toaDoYDiaDuyChuyen = YDiaDiChuyenNgang; 
 		  	
-		  	for (k = toaDoYDiaDuyChuyen; k < YdiaTrenCungCotSau;k+= tocDo) {
-		  		// tang dan k len 
-		  		this->veDia(toaDoXDiaDiChuyen,k,duongKinhDiaTrenCung); 
-		  		delay(0); 
-		  		this->xoaDia(toaDoXDiaDiChuyen,k,duongKinhDiaTrenCung); 
-		  		this->ve03Cot();   		
-			  }
-			  this->veDia(toaDoXDiaDiChuyen,k,duongKinhDiaTrenCung); 
-	
+			  	k = toaDoYDiaDuyChuyen; 
+				while (k < YdiaTrenCungCotSau) {
+					this->veDia(toaDoXDiaDiChuyen,k,duongKinhDiaTrenCung); 
+			  		this->ve03Cot(); 
+			  		delay(timeDelay); 
+			  		this->xoaDia(toaDoXDiaDiChuyen,k,duongKinhDiaTrenCung); 
+			  		this->dieuKhienTocDo();  
+			  		k += tocDo; 
+				}
+				// tinh toan diem ha xuong cua thang nay 
+			  int YdiaHaXuong = toaDoYGiaDo - (chieuCaoDia + khoanCachDia) * soDiaCotSau - 18 - khoanCachDia ; 
+			  
+			  
+			  this->veDia(toaDoXDiaDiChuyen,YdiaHaXuong,duongKinhDiaTrenCung); 
+			  this->ve03Cot(); 
 		}
 		
 		void veDia (int X,int Y,int duongKinh) { 
@@ -254,6 +317,35 @@ class Tower {
 			Graphics::drawRegtagle(toaDoXCotC,toaDoYGiaDo + chieuDaiThanh,chieuDaiThanh,-400); 
 		}
 		
+		void veTieuDeGiaDo () {
+			
+			settextstyle(10, HORIZ_DIR, 6);
+			
+			string tieuDe = "Bai Toan Thap Ha Noi"; 
+			outtextxy(60, 40, (char*)tieuDe.c_str());
+			
+			settextstyle(10, HORIZ_DIR, 2);
+			string huongDan = "(Su dung phim mui ten de tang / giam toc do)"; 
+			outtextxy(60, 100, (char*)huongDan.c_str());
+			
+			
+			string tieuDeCotA = "Cot A"; 
+			string tieuDeCotB = "Cot B"; 
+			string tieuDeCotC = "Cot C"; 
+			settextstyle(4, 0, 2);
+			int widthText = textwidth((char*)tieuDeCotA.c_str()); 
+			int XtextgiaDoA = XgiaDoA + ( chieuDaiGiaDo - widthText ) / 2;   
+			outtextxy(XtextgiaDoA,this->toaDoYTieuDe,(char*)tieuDeCotA.c_str()); 
+			
+			
+			
+			int XtextgiaDoB = XgiaDoB + ( chieuDaiGiaDo - widthText ) / 2;   
+			outtextxy(XtextgiaDoB,this->toaDoYTieuDe,(char*)tieuDeCotB.c_str()); 
+			
+			int XtextgiaDoC = XgiaDoC + ( chieuDaiGiaDo - widthText ) / 2;   
+			outtextxy(XtextgiaDoC,this->toaDoYTieuDe,(char*)tieuDeCotC.c_str()); 
+		}
+		
 		void veGiaDo () { 
 			Graphics::drawRegtagle(canLeXGiaDo,toaDoYGiaDo,chieuDaiGiaDo,chieuDaiThanh); 
 			Graphics::drawRegtagle(khoanCachGiaDo + chieuDaiGiaDo + canLeXGiaDo,toaDoYGiaDo,300,chieuDaiThanh);
@@ -269,7 +361,8 @@ class Tower {
 			
 		void khoiTaoGiaoDien() {
 			setfillstyle(SOLID_FILL, 2);   
-			this->veGiaDo();  		
+			this->veGiaDo();  
+			this->veTieuDeGiaDo();
 			this->ve03Cot(); 
 			this->khoiTaoBanKinhDia(); 
 			this->veNhieuDia(this->diaCotA,canLeXGiaDo,toaDoYGiaDo); 
